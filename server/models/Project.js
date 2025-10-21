@@ -128,6 +128,24 @@ projectSchema.index({ status: 1, visibility: 1 });
 projectSchema.index({ 'metrics.upvoteCount': -1 });
 projectSchema.index({ createdAt: -1 });
 
+// Text search index
+projectSchema.index({
+  title: 'text',
+  description: 'text',
+  shortDescription: 'text',
+  tags: 'text',
+  technologies: 'text'
+}, {
+  weights: {
+    title: 10,
+    shortDescription: 5,
+    tags: 3,
+    technologies: 2,
+    description: 1
+  },
+  name: 'project_text_search'
+});
+
 // Virtual for upvote count
 projectSchema.virtual('upvoteCount').get(function() {
   return this.upvotes.length;

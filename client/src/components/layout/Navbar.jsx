@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Search, Menu, X, User, LogOut, Settings, Plus } from 'lucide-react';
+import NotificationBell from '../NotificationBell';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -57,6 +58,9 @@ const Navbar = () => {
                   <Plus className="w-4 h-4" />
                   <span>New Project</span>
                 </Link>
+
+                {/* Notifications */}
+                <NotificationBell />
 
                 {/* Profile Dropdown */}
                 <div className="relative">
@@ -169,6 +173,9 @@ const Navbar = () => {
                   >
                     New Project
                   </Link>
+                  <div className="px-3 py-2">
+                    <NotificationBell />
+                  </div>
                   <Link
                     to={`/profile/${user?.username}`}
                     className="text-gray-700 hover:text-blue-600 block px-3 py-2 rounded-md text-base font-medium"

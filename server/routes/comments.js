@@ -7,7 +7,7 @@ const { auth } = require('../middleware/auth');
 const router = express.Router();
 
 // @route   GET /api/projects/:projectId/comments
-// @desc    Get comments for a project
+// @desc    Get comments for a project with threading (max 2 levels)
 // @access  Public
 router.get('/projects/:projectId/comments', async (req, res) => {
   try {
@@ -15,23 +15,43 @@ router.get('/projects/:projectId/comments', async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const comments = await Comment.find({
+    // Get top-level comments (no parent)
+    const topLevelComments = await Comment.find({
       project: req.params.projectId,
       parentComment: null,
       isDeleted: false,
     })
       .populate('author', 'username firstName lastName avatar')
-      .populate({
-        path: 'replies',
-        populate: {
-          path: 'author',
-          select: 'username firstName lastName avatar',
-        },
-      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
+
+    // Get replies for each top-level comment (max 2 levels deep)
+    const commentsWithReplies = await Promise.all(
+      topLevelComments.map(async (comment) => {
+        const replies = await Comment.find({
+          parentComment: comment._id,
+          isDeleted: false,
+        })
+          .populate('author', 'username firstName lastName avatar')
+          .populate({
+            path: 'replies',
+            populate: {
+              path: 'author',
+              select: 'username firstName lastName avatar',
+            },
+          })
+          .sort({ createdAt: 1 }) // Show replies in chronological order
+          .limit(10) // Limit replies per comment
+          .lean();
+
+        return {
+          ...comment,
+          replies
+        };
+      })
+    );
 
     const total = await Comment.countDocuments({
       project: req.params.projectId,
@@ -40,7 +60,7 @@ router.get('/projects/:projectId/comments', async (req, res) => {
     });
 
     res.json({
-      comments,
+      comments: commentsWithReplies,
       pagination: {
         current: page,
         pages: Math.ceil(total / limit),
@@ -91,13 +111,27 @@ router.post('/projects/:projectId/comments', auth, [
     const comment = new Comment(commentData);
     await comment.save();
 
-    // If it's a reply, add to parent comment's replies
+    // If it's a reply, add to parent comment's replies and create notification
     if (req.body.parentComment) {
-      const parentComment = await Comment.findById(req.body.parentComment);
+      const parentComment = await Comment.findById(req.body.parentComment).populate('author');
       if (parentComment) {
         parentComment.replies.push(comment._id);
         parentComment.metrics.replyCount = parentComment.replies.length;
         await parentComment.save();
+
+        // Create notification for parent comment author (if not the same user)
+        if (parentComment.author._id.toString() !== req.user._id.toString()) {
+          const Project = require('../models/Project');
+          const project = await Project.findById(req.params.projectId);
+          const NotificationService = require('../services/notificationService');
+          
+          await NotificationService.createReplyNotification(
+            parentComment.author._id,
+            req.user,
+            project,
+            comment
+          );
+        }
       }
     }
 

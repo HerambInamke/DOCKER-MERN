@@ -12,6 +12,9 @@ const projectRoutes = require('./routes/projects');
 const commentRoutes = require('./routes/comments');
 const userRoutes = require('./routes/users');
 const statsRoutes = require('./routes/stats');
+const notificationRoutes = require('./routes/notifications');
+const trendingRoutes = require('./routes/trending');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -22,12 +25,28 @@ connectDB();
 app.use(helmet());
 
 // Rate limiting
-const limiter = rateLimit({
+const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
 });
-app.use(limiter);
+
+// Strict rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // limit each IP to 5 login attempts per windowMs
+  message: 'Too many login attempts, please try again later.',
+  skipSuccessfulRequests: true,
+});
+
+// Rate limiting for write operations
+const writeLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 write requests per minute
+  message: 'Too many write requests, please slow down.',
+});
+
+app.use(generalLimiter);
 
 // CORS configuration
 app.use(cors({
@@ -42,12 +61,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api', commentRoutes);
-app.use('/api/users', userRoutes);
+// Routes with rate limiting
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/projects', writeLimiter, projectRoutes);
+app.use('/api', writeLimiter, commentRoutes);
+app.use('/api/users', writeLimiter, userRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/trending', trendingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

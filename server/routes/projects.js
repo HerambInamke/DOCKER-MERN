@@ -34,6 +34,11 @@ router.get('/', [
       visibility: 'public',
     };
 
+    // Text search
+    if (req.query.search) {
+      filter.$text = { $search: req.query.search };
+    }
+
     if (req.query.tags) {
       const tags = req.query.tags.split(',').map(tag => tag.trim().toLowerCase());
       filter.tags = { $in: tags };
@@ -283,7 +288,7 @@ router.delete('/:id', auth, async (req, res) => {
 // @access  Private
 router.post('/:id/upvote', auth, async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const project = await Project.findById(req.params.id).populate('author');
 
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
@@ -296,6 +301,17 @@ router.post('/:id/upvote', auth, async (req, res) => {
       res.json({ message: 'Upvote removed', upvoted: false });
     } else {
       await project.addUpvote(req.user._id);
+      
+      // Create notification for project author (if not the same user)
+      if (project.author._id.toString() !== req.user._id.toString()) {
+        const NotificationService = require('../services/notificationService');
+        await NotificationService.createStarNotification(
+          project.author._id,
+          req.user,
+          project
+        );
+      }
+      
       res.json({ message: 'Project upvoted', upvoted: true });
     }
   } catch (error) {
