@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const commentRoutes = require('./routes/comments');
 const userRoutes = require('./routes/users');
+const statsRoutes = require('./routes/stats');
 
 const app = express();
 
@@ -38,11 +39,15 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api', commentRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

@@ -325,7 +325,7 @@ router.post('/:id/images', auth, upload.array('images', 5), async (req, res) => 
     }
 
     const images = req.files.map((file, index) => ({
-      url: file.path,
+      url: `/uploads/${file.filename}`,
       alt: req.body.alt || `Project image ${index + 1}`,
       isPrimary: index === 0 && project.images.length === 0,
     }));
