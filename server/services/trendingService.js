@@ -162,3 +162,4 @@ class TrendingService {
 }
 
 module.exports = new TrendingService();
+ 

@@ -90,3 +90,4 @@ setup: install ## Complete development setup
 	cp client/.env.example client/.env
 	@echo "Environment files created. Please edit them with your configuration."
 	@echo "Then run 'make dev' to start the development environment."
+ 

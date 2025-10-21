@@ -167,3 +167,4 @@ userSchema.virtual('followingCount').get(function() {
 });
 
 module.exports = mongoose.model('User', userSchema);
+ 

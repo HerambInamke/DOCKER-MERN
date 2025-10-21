@@ -278,3 +278,4 @@ Your DevHub platform is now **fully functional** with all the specified features
 - ✅ **Trending algorithm** with manual calculation
 
 **Start building your developer community!** 🚀
+ 

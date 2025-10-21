@@ -24,3 +24,4 @@ db.comments.createIndex({ "author": 1 });
 db.comments.createIndex({ "parentComment": 1 });
 
 print('Database initialized successfully');
+ 

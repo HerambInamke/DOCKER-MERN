@@ -12,3 +12,5 @@ echo Backend: http://localhost:5000
 echo MongoDB Admin: http://localhost:8081
 echo.
 pause
+ 
+

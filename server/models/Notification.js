@@ -75,3 +75,4 @@ notificationSchema.statics.getUnreadCount = async function(userId) {
 };
 
 module.exports = mongoose.model('Notification', notificationSchema);
+ 

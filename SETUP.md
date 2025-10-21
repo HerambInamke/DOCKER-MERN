@@ -219,3 +219,4 @@ If you encounter issues:
 4. Review the logs in terminal
 
 For more help, check the main README.md file.
+ 

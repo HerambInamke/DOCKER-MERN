@@ -185,3 +185,4 @@ projectSchema.methods.incrementViews = function() {
 };
 
 module.exports = mongoose.model('Project', projectSchema);
+ 

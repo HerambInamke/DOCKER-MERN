@@ -116,3 +116,4 @@ commentSchema.methods.editComment = function(newContent) {
 };
 
 module.exports = mongoose.model('Comment', commentSchema);
+ 

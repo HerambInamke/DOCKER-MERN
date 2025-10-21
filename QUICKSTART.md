@@ -177,3 +177,4 @@ cd ../server && npm start
 Your DevHub platform is now running! Start building your developer community.
 
 For detailed documentation, see `README.md` and `SETUP.md`.
+ 
