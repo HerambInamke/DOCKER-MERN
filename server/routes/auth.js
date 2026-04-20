@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
+const passport = require('../config/passport');
 
 const router = express.Router();
 
@@ -11,6 +12,24 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE,
   });
+};
+
+const getClientAuthRedirect = (token) => {
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  return `${clientUrl}/auth/callback?token=${encodeURIComponent(token)}`;
+};
+
+const requireOAuthConfig = (provider) => (req, res, next) => {
+  const upperProvider = provider.toUpperCase();
+  if (!process.env[`${upperProvider}_CLIENT_ID`] || !process.env[`${upperProvider}_CLIENT_SECRET`]) {
+    const message = `${provider} login is not configured yet. Add ${upperProvider}_CLIENT_ID and ${upperProvider}_CLIENT_SECRET to server/.env.`;
+    if (req.accepts('html')) {
+      const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+      return res.redirect(`${clientUrl}/login?error=${encodeURIComponent(message)}`);
+    }
+    return res.status(503).json({ message });
+  }
+  next();
 };
 
 // @route   POST /api/auth/register
@@ -29,6 +48,10 @@ router.post('/register', [
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters'),
+  body('displayName')
+    .optional({ checkFalsy: true })
+    .isLength({ max: 80 })
+    .withMessage('Display name cannot exceed 80 characters'),
   body('firstName')
     .notEmpty()
     .withMessage('First name is required')
@@ -46,7 +69,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { username, email, password, firstName, lastName } = req.body;
+    const { username, email, password, firstName, lastName, displayName } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -64,6 +87,7 @@ router.post('/register', [
       username,
       email,
       password,
+      displayName: displayName || `${firstName} ${lastName}`,
       firstName,
       lastName,
     });
@@ -159,6 +183,10 @@ router.put('/profile', auth, [
     .optional()
     .isLength({ max: 50 })
     .withMessage('Last name cannot exceed 50 characters'),
+  body('displayName')
+    .optional({ checkFalsy: true })
+    .isLength({ max: 80 })
+    .withMessage('Display name cannot exceed 80 characters'),
   body('bio')
     .optional()
     .isLength({ max: 500 })
@@ -167,6 +195,10 @@ router.put('/profile', auth, [
     .optional()
     .isLength({ max: 100 })
     .withMessage('Location cannot exceed 100 characters'),
+  body('college')
+    .optional({ checkFalsy: true })
+    .isLength({ max: 120 })
+    .withMessage('College cannot exceed 120 characters'),
   body('website')
     .optional({ checkFalsy: true })
     .isURL()
@@ -191,7 +223,7 @@ router.put('/profile', auth, [
     }
 
     const allowedUpdates = [
-      'firstName', 'lastName', 'bio', 'location', 'website',
+      'displayName', 'firstName', 'lastName', 'bio', 'location', 'college', 'website',
       'github', 'twitter', 'linkedin', 'skills', 'preferences'
     ];
 
@@ -216,6 +248,44 @@ router.put('/profile', auth, [
     console.error('Profile update error:', error);
     res.status(500).json({ message: 'Server error during profile update' });
   }
+});
+
+// @route   GET /api/auth/google
+// @desc    Start Google OAuth login/register
+// @access  Public
+router.get('/google', requireOAuthConfig('google'), passport.authenticate('google', {
+  scope: ['profile', 'email'],
+  session: false,
+}));
+
+// @route   GET /api/auth/google/callback
+// @desc    Complete Google OAuth login/register
+// @access  Public
+router.get('/google/callback', requireOAuthConfig('google'), passport.authenticate('google', {
+  session: false,
+  failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=google_oauth_failed`,
+}), (req, res) => {
+  const token = generateToken(req.user._id);
+  res.redirect(getClientAuthRedirect(token));
+});
+
+// @route   GET /api/auth/github
+// @desc    Start GitHub OAuth login/register
+// @access  Public
+router.get('/github', requireOAuthConfig('github'), passport.authenticate('github', {
+  scope: ['user:email'],
+  session: false,
+}));
+
+// @route   GET /api/auth/github/callback
+// @desc    Complete GitHub OAuth login/register
+// @access  Public
+router.get('/github/callback', requireOAuthConfig('github'), passport.authenticate('github', {
+  session: false,
+  failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=github_oauth_failed`,
+}), (req, res) => {
+  const token = generateToken(req.user._id);
+  res.redirect(getClientAuthRedirect(token));
 });
 
 // @route   POST /api/auth/change-password
@@ -255,4 +325,3 @@ router.post('/change-password', auth, [
 });
 
 module.exports = router;
- 

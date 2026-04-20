@@ -224,7 +224,7 @@ const Projects = () => {
                         </div>
                       )}
                       <div>
-                        <p className="font-medium text-gray-900">{project.author?.username}</p>
+                        <p className="font-medium text-gray-900">{project.author?.displayName || project.author?.username}</p>
                         <p className="text-sm text-gray-500 flex items-center">
                           <Calendar className="w-3 h-3 mr-1" />
                           {new Date(project.createdAt).toLocaleDateString()}

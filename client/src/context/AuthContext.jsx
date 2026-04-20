@@ -10,6 +10,10 @@ const initialState = {
   loading: true,
 };
 
+const getApiErrorMessage = (error, fallback) => {
+  return error.response?.data?.errors?.[0]?.msg || error.response?.data?.message || fallback;
+};
+
 const authReducer = (state, action) => {
   switch (action.type) {
     case 'LOGIN_SUCCESS':
@@ -90,7 +94,7 @@ export const AuthProvider = ({ children }) => {
       toast.success('Login successful!');
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
+      const message = getApiErrorMessage(error, 'Login failed');
       toast.error(message);
       return { success: false, message };
     }
@@ -106,11 +110,33 @@ export const AuthProvider = ({ children }) => {
       toast.success('Registration successful!');
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed';
+      const message = getApiErrorMessage(error, 'Registration failed');
       toast.error(message);
       return { success: false, message };
     }
   };
+
+  const completeOAuthLogin = useCallback(async (token) => {
+    try {
+      localStorage.setItem('token', token);
+      const res = await api.get('/api/auth/me');
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: {
+          token,
+          user: res.data.user,
+        },
+      });
+      toast.success('Login successful!');
+      return { success: true };
+    } catch (error) {
+      localStorage.removeItem('token');
+      dispatch({ type: 'AUTH_ERROR' });
+      const message = getApiErrorMessage(error, 'Social login failed');
+      toast.error(message);
+      return { success: false, message };
+    }
+  }, []);
 
   const logout = () => {
     dispatch({ type: 'LOGOUT' });
@@ -127,7 +153,7 @@ export const AuthProvider = ({ children }) => {
       toast.success('Profile updated successfully!');
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Profile update failed';
+      const message = getApiErrorMessage(error, 'Profile update failed');
       toast.error(message);
       return { success: false, message };
     }
@@ -142,7 +168,7 @@ export const AuthProvider = ({ children }) => {
       toast.success('Password changed successfully!');
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.message || 'Password change failed';
+      const message = getApiErrorMessage(error, 'Password change failed');
       toast.error(message);
       return { success: false, message };
     }
@@ -152,6 +178,7 @@ export const AuthProvider = ({ children }) => {
     ...state,
     login,
     register,
+    completeOAuthLogin,
     logout,
     updateProfile,
     changePassword,

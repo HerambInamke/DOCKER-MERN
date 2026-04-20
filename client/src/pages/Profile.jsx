@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from 'react-query';
-import { Calendar, Edit3, ExternalLink, Github, Linkedin, MapPin, Save, Star, Twitter, X } from 'lucide-react';
+import { Calendar, Edit3, ExternalLink, Github, GraduationCap, Linkedin, MapPin, Save, Star, Twitter, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import api from '../utils/api';
 
-const profileFields = ['firstName', 'lastName', 'bio', 'location', 'website', 'github', 'twitter', 'linkedin'];
+const profileFields = ['displayName', 'firstName', 'lastName', 'bio', 'location', 'college', 'website', 'github', 'twitter', 'linkedin'];
 
 const Profile = () => {
   const { username } = useParams();
@@ -16,8 +16,10 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    displayName: '',
     bio: '',
     location: '',
+    college: '',
     website: '',
     github: '',
     twitter: '',
@@ -120,7 +122,7 @@ const Profile = () => {
 
               <div className="min-w-0">
                 <h1 className="text-3xl font-bold text-slate-950">
-                  {profileUser.firstName} {profileUser.lastName}
+                  {profileUser.displayName || `${profileUser.firstName} ${profileUser.lastName}`}
                 </h1>
                 <p className="mt-1 text-lg text-slate-500">@{profileUser.username}</p>
                 {profileUser.bio && <p className="mt-4 max-w-3xl leading-7 text-slate-700">{profileUser.bio}</p>}
@@ -130,6 +132,12 @@ const Profile = () => {
                     <span className="flex items-center">
                       <MapPin className="mr-1.5 h-4 w-4" />
                       {profileUser.location}
+                    </span>
+                  )}
+                  {profileUser.college && (
+                    <span className="flex items-center">
+                      <GraduationCap className="mr-1.5 h-4 w-4" />
+                      {profileUser.college}
                     </span>
                   )}
                   <span className="flex items-center">
@@ -195,6 +203,10 @@ const Profile = () => {
           <section className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <h2 className="text-xl font-semibold text-slate-950">Update profile</h2>
             <form onSubmit={handleSave} className="mt-6 grid gap-5 md:grid-cols-2">
+              <label className="block md:col-span-2">
+                <span className="text-sm font-medium text-slate-700">Display name</span>
+                <input name="displayName" value={formData.displayName} onChange={handleChange} placeholder="Your public display name" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2" />
+              </label>
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">First name</span>
                 <input name="firstName" value={formData.firstName} onChange={handleChange} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2" />
@@ -210,6 +222,10 @@ const Profile = () => {
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Location</span>
                 <input name="location" value={formData.location} onChange={handleChange} className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2" />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium text-slate-700">College</span>
+                <input name="college" value={formData.college} onChange={handleChange} placeholder="Your college or university" className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2" />
               </label>
               <label className="block">
                 <span className="text-sm font-medium text-slate-700">Website</span>

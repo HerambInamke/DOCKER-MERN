@@ -1,18 +1,28 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import { Eye, EyeOff, Github, Mail } from 'lucide-react';
 
 const Login = () => {
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error) {
+      toast.error(error);
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     setFormData({
@@ -150,14 +160,20 @@ const Login = () => {
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              <a
+                href={`${apiBaseUrl}/api/auth/github`}
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
                 <Github className="h-5 w-5" />
                 <span className="ml-2">GitHub</span>
-              </button>
-              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              </a>
+              <a
+                href={`${apiBaseUrl}/api/auth/google`}
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
                 <Mail className="h-5 w-5" />
                 <span className="ml-2">Google</span>
-              </button>
+              </a>
             </div>
           </div>
         </div>

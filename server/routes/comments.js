@@ -21,7 +21,7 @@ router.get('/projects/:projectId/comments', async (req, res) => {
       parentComment: null,
       isDeleted: false,
     })
-      .populate('author', 'username firstName lastName avatar')
+      .populate('author', 'username displayName firstName lastName avatar')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -34,12 +34,12 @@ router.get('/projects/:projectId/comments', async (req, res) => {
           parentComment: comment._id,
           isDeleted: false,
         })
-          .populate('author', 'username firstName lastName avatar')
+          .populate('author', 'username displayName firstName lastName avatar')
           .populate({
             path: 'replies',
             populate: {
               path: 'author',
-              select: 'username firstName lastName avatar',
+              select: 'username displayName firstName lastName avatar',
             },
           })
           .sort({ createdAt: 1 }) // Show replies in chronological order
@@ -141,7 +141,7 @@ router.post('/projects/:projectId/comments', auth, [
     await project.save();
 
     const populatedComment = await Comment.findById(comment._id)
-      .populate('author', 'username firstName lastName avatar');
+      .populate('author', 'username displayName firstName lastName avatar');
 
     res.status(201).json({
       message: 'Comment created successfully',
@@ -183,7 +183,7 @@ router.put('/:id', auth, [
     await comment.editComment(req.body.content);
 
     const updatedComment = await Comment.findById(comment._id)
-      .populate('author', 'username firstName lastName avatar');
+      .populate('author', 'username displayName firstName lastName avatar');
 
     res.json({
       message: 'Comment updated successfully',

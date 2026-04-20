@@ -24,6 +24,12 @@ const userSchema = new mongoose.Schema({
     },
     minlength: [6, 'Password must be at least 6 characters'],
   },
+  displayName: {
+    type: String,
+    trim: true,
+    maxlength: [80, 'Display name cannot exceed 80 characters'],
+    default: '',
+  },
   firstName: {
     type: String,
     required: [true, 'First name is required'],
@@ -48,6 +54,12 @@ const userSchema = new mongoose.Schema({
   location: {
     type: String,
     maxlength: [100, 'Location cannot exceed 100 characters'],
+    default: '',
+  },
+  college: {
+    type: String,
+    trim: true,
+    maxlength: [120, 'College cannot exceed 120 characters'],
     default: '',
   },
   website: {

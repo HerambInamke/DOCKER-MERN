@@ -4,11 +4,13 @@ import { useAuth } from '../hooks/useAuth';
 import { Eye, EyeOff, Github, Mail } from 'lucide-react';
 
 const Register = () => {
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
     confirmPassword: '',
+    displayName: '',
     firstName: '',
     lastName: '',
   });
@@ -84,6 +86,7 @@ const Register = () => {
       username: formData.username,
       email: formData.email,
       password: formData.password,
+      displayName: formData.displayName,
       firstName: formData.firstName,
       lastName: formData.lastName,
     });
@@ -117,6 +120,21 @@ const Register = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
+                Display name
+              </label>
+              <input
+                id="displayName"
+                name="displayName"
+                type="text"
+                value={formData.displayName}
+                onChange={handleChange}
+                className="mt-1 appearance-none block w-full px-3 py-2 border rounded-md border-gray-300 placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="How your name should appear"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -301,14 +319,20 @@ const Register = () => {
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              <a
+                href={`${apiBaseUrl}/api/auth/github`}
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
                 <Github className="h-5 w-5" />
                 <span className="ml-2">GitHub</span>
-              </button>
-              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+              </a>
+              <a
+                href={`${apiBaseUrl}/api/auth/google`}
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+              >
                 <Mail className="h-5 w-5" />
                 <span className="ml-2">Google</span>
-              </button>
+              </a>
             </div>
           </div>
         </div>

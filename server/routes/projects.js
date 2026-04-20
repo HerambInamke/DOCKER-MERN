@@ -77,7 +77,7 @@ router.get('/', [
     }
 
     const projects = await Project.find(filter)
-      .populate('author', 'username firstName lastName avatar')
+      .populate('author', 'username displayName firstName lastName avatar')
       .sort(sort)
       .skip(skip)
       .limit(limit)
@@ -107,8 +107,8 @@ router.get('/', [
 router.get('/:id', async (req, res) => {
   try {
     const project = await Project.findById(req.params.id)
-      .populate('author', 'username firstName lastName avatar bio')
-      .populate('collaborators.user', 'username firstName lastName avatar');
+      .populate('author', 'username displayName firstName lastName avatar bio college')
+      .populate('collaborators.user', 'username displayName firstName lastName avatar');
 
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
@@ -176,7 +176,7 @@ router.post('/', auth, [
     await project.save();
 
     const populatedProject = await Project.findById(project._id)
-      .populate('author', 'username firstName lastName avatar');
+      .populate('author', 'username displayName firstName lastName avatar');
 
     res.status(201).json({
       message: 'Project created successfully',
@@ -246,7 +246,8 @@ router.put('/:id', auth, [
       req.params.id,
       updates,
       { new: true, runValidators: true }
-    ).populate('author', 'username firstName lastName avatar');
+    ).populate('author', 'username displayName firstName lastName avatar');
+    
 
     res.json({
       message: 'Project updated successfully',

@@ -15,6 +15,7 @@ import EditProject from './pages/EditProject';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AuthCallback from './pages/AuthCallback';
 import NotFound from './pages/NotFound';
 
 // Context
@@ -50,6 +51,7 @@ function App() {
                 <Route path="/profile/:username" element={<Profile />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

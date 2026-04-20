@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const connectDB = require('./config/database');
+const passport = require('./config/passport');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -61,6 +62,7 @@ app.use(cors({
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(passport.initialize());
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
