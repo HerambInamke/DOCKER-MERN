@@ -1,8 +1,7 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
-import axios from 'axios';
+import { useCallback, useEffect, useReducer } from 'react';
 import toast from 'react-hot-toast';
-
-const AuthContext = createContext();
+import api from '../utils/api';
+import { AuthContext } from './auth-context';
 
 const initialState = {
   user: null,
@@ -60,14 +59,17 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Set up axios defaults
-  useEffect(() => {
-    if (state.token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
-    } else {
-      delete axios.defaults.headers.common['Authorization'];
+  const loadUser = useCallback(async () => {
+    try {
+      const res = await api.get('/api/auth/me');
+      dispatch({
+        type: 'USER_LOADED',
+        payload: res.data.user,
+      });
+    } catch {
+      dispatch({ type: 'AUTH_ERROR' });
     }
-  }, [state.token]);
+  }, []);
 
   // Load user on app start
   useEffect(() => {
@@ -76,23 +78,11 @@ export const AuthProvider = ({ children }) => {
     } else {
       dispatch({ type: 'AUTH_ERROR' });
     }
-  }, []);
-
-  const loadUser = async () => {
-    try {
-      const res = await axios.get('/api/auth/me');
-      dispatch({
-        type: 'USER_LOADED',
-        payload: res.data.user,
-      });
-    } catch (error) {
-      dispatch({ type: 'AUTH_ERROR' });
-    }
-  };
+  }, [loadUser, state.token]);
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post('/api/auth/login', { email, password });
+      const res = await api.post('/api/auth/login', { email, password });
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: res.data,
@@ -108,7 +98,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const res = await axios.post('/api/auth/register', userData);
+      const res = await api.post('/api/auth/register', userData);
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: res.data,
@@ -129,7 +119,7 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     try {
-      const res = await axios.put('/api/auth/profile', profileData);
+      const res = await api.put('/api/auth/profile', profileData);
       dispatch({
         type: 'UPDATE_USER',
         payload: res.data.user,
@@ -145,7 +135,7 @@ export const AuthProvider = ({ children }) => {
 
   const changePassword = async (currentPassword, newPassword) => {
     try {
-      await axios.post('/api/auth/change-password', {
+      await api.post('/api/auth/change-password', {
         currentPassword,
         newPassword,
       });
@@ -168,13 +158,4 @@ export const AuthProvider = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
- 
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

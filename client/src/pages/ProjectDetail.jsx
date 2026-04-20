@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import api from '../utils/api';
 import { Star, Eye, Github, ExternalLink, Calendar, User, MessageCircle, Heart } from 'lucide-react';
 

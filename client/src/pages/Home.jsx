@@ -1,6 +1,6 @@
 import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import api from '../utils/api';
 import { ArrowRight, Github, Star, Users, TrendingUp } from 'lucide-react';
 

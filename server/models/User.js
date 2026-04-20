@@ -52,22 +52,34 @@ const userSchema = new mongoose.Schema({
   },
   website: {
     type: String,
-    match: [/^https?:\/\/.+/, 'Please enter a valid URL'],
+    validate: {
+      validator: value => !value || /^https?:\/\/.+/.test(value),
+      message: 'Please enter a valid URL',
+    },
     default: '',
   },
   github: {
     type: String,
-    match: [/^[a-zA-Z0-9-]+$/, 'Please enter a valid GitHub username'],
+    validate: {
+      validator: value => !value || /^[a-zA-Z0-9-]+$/.test(value),
+      message: 'Please enter a valid GitHub username',
+    },
     default: '',
   },
   twitter: {
     type: String,
-    match: [/^[a-zA-Z0-9_]+$/, 'Please enter a valid Twitter username'],
+    validate: {
+      validator: value => !value || /^[a-zA-Z0-9_]+$/.test(value),
+      message: 'Please enter a valid Twitter username',
+    },
     default: '',
   },
   linkedin: {
     type: String,
-    match: [/^[a-zA-Z0-9-]+$/, 'Please enter a valid LinkedIn username'],
+    validate: {
+      validator: value => !value || /^[a-zA-Z0-9-]+$/.test(value),
+      message: 'Please enter a valid LinkedIn username',
+    },
     default: '',
   },
   role: {
@@ -118,8 +130,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes for better performance
-userSchema.index({ username: 1 });
-userSchema.index({ email: 1 });
 userSchema.index({ github: 1 });
 userSchema.index({ skills: 1 });
 

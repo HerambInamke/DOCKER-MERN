@@ -18,9 +18,6 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
-// Connect to database
-connectDB();
-
 // Security middleware
 app.use(helmet());
 
@@ -110,8 +107,14 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+const startServer = async () => {
+  await connectDB();
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
+};
+
+startServer();
  

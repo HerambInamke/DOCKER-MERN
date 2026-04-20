@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import api from '../utils/api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from './useAuth';
 
 export const useNotifications = () => {
   const { isAuthenticated } = useAuth();
@@ -23,7 +23,7 @@ export const useNotifications = () => {
   );
 
   // Fetch unread count separately for real-time updates
-  const { data: unreadCountData } = useQuery(
+  useQuery(
     'notifications-unread-count',
     () => api.get('/api/notifications/unread-count').then(res => res.data),
     {

@@ -1,5 +1,5 @@
 const express = require('express');
-const { query, validationResult } = require('express-validator');
+const { body, query, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Project = require('../models/Project');
 const Comment = require('../models/Comment');
