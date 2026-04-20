@@ -1,17 +1,69 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../utils/api';
-import { Search, Filter, Star, Eye, Calendar } from 'lucide-react';
+import { Search, Star, Eye, Calendar } from 'lucide-react';
 
 const Projects = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState({
-    search: '',
-    sort: 'newest',
-    tags: '',
-    technologies: '',
-    page: 1,
+    search: searchParams.get('search') || '',
+    sort: searchParams.get('sort') || 'newest',
+    tags: searchParams.get('tags') || '',
+    technologies: searchParams.get('technologies') || '',
+    page: Number(searchParams.get('page')) || 1,
   });
+  const [draftFilters, setDraftFilters] = useState({
+    search: searchParams.get('search') || '',
+    tags: searchParams.get('tags') || '',
+    technologies: searchParams.get('technologies') || '',
+  });
+
+  useEffect(() => {
+    const nextFilters = {
+      search: searchParams.get('search') || '',
+      sort: searchParams.get('sort') || 'newest',
+      tags: searchParams.get('tags') || '',
+      technologies: searchParams.get('technologies') || '',
+      page: Number(searchParams.get('page')) || 1,
+    };
+
+    setFilters(nextFilters);
+    setDraftFilters({
+      search: nextFilters.search,
+      tags: nextFilters.tags,
+      technologies: nextFilters.technologies,
+    });
+  }, [searchParams]);
+
+  const handleFilterChange = useCallback((key, value) => {
+    const nextFilters = key === 'bulk'
+      ? { ...filters, ...value, page: 1 }
+      : { ...filters, [key]: value, page: 1 };
+    setFilters(nextFilters);
+    const nextParams = new URLSearchParams();
+    Object.entries(nextFilters).forEach(([filterKey, filterValue]) => {
+      if (filterValue && filterValue !== 'newest' && filterValue !== 1) {
+        nextParams.set(filterKey, filterValue);
+      }
+    });
+    setSearchParams(nextParams);
+  }, [filters, setSearchParams]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const hasChanged =
+        draftFilters.search !== filters.search ||
+        draftFilters.tags !== filters.tags ||
+        draftFilters.technologies !== filters.technologies;
+
+      if (hasChanged) {
+        handleFilterChange('bulk', draftFilters);
+      }
+    }, 450);
+
+    return () => clearTimeout(timeout);
+  }, [draftFilters, filters.search, filters.tags, filters.technologies, handleFilterChange]);
 
   const { data, isLoading, error } = useQuery(
     ['projects', filters],
@@ -27,23 +79,48 @@ const Projects = () => {
     }
   );
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+  const handlePageChange = (page) => {
+    const nextFilters = { ...filters, page };
+    setFilters(nextFilters);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('page', page);
+    setSearchParams(nextParams);
   };
 
-  const handlePageChange = (page) => {
-    setFilters(prev => ({ ...prev, page }));
+  const clearFilters = () => {
+    const nextFilters = {
+      search: '',
+      sort: 'newest',
+      tags: '',
+      technologies: '',
+      page: 1,
+    };
+    setFilters(nextFilters);
+    setDraftFilters({
+      search: '',
+      tags: '',
+      technologies: '',
+    });
+    setSearchParams({});
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover Projects</h1>
           <p className="text-gray-600">
             Explore amazing projects built by developers around the world
           </p>
+          </div>
+          <Link
+            to="/create-project"
+            className="inline-flex justify-center rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+          >
+            Post a project
+          </Link>
         </div>
 
         {/* Filters */}
@@ -55,8 +132,8 @@ const Projects = () => {
               <input
                 type="text"
                 placeholder="Search projects..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
+                value={draftFilters.search}
+                onChange={(e) => setDraftFilters(prev => ({ ...prev, search: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -77,8 +154,8 @@ const Projects = () => {
             <input
               type="text"
               placeholder="Filter by tags..."
-              value={filters.tags}
-              onChange={(e) => handleFilterChange('tags', e.target.value)}
+              value={draftFilters.tags}
+              onChange={(e) => setDraftFilters(prev => ({ ...prev, tags: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
 
@@ -86,11 +163,21 @@ const Projects = () => {
             <input
               type="text"
               placeholder="Filter by technologies..."
-              value={filters.technologies}
-              onChange={(e) => handleFilterChange('technologies', e.target.value)}
+              value={draftFilters.technologies}
+              onChange={(e) => setDraftFilters(prev => ({ ...prev, technologies: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
+          {(filters.search || filters.tags || filters.technologies || filters.sort !== 'newest') && (
+            <div className="mt-4 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
+              <span className="text-slate-600">
+                Showing filtered results{data?.pagination?.total !== undefined ? ` (${data.pagination.total})` : ''}
+              </span>
+              <button type="button" onClick={clearFilters} className="font-medium text-blue-600 hover:text-blue-700">
+                Clear filters
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Projects Grid */}
@@ -109,8 +196,11 @@ const Projects = () => {
             <p className="text-red-600">Error loading projects. Please try again.</p>
           </div>
         ) : data?.projects?.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No projects found matching your criteria.</p>
+          <div className="rounded-lg border border-dashed border-gray-300 bg-white py-12 text-center">
+            <p className="text-gray-600">No projects found matching your criteria.</p>
+            <button type="button" onClick={clearFilters} className="mt-4 rounded-md bg-slate-950 px-4 py-2 font-medium text-white">
+              Reset filters
+            </button>
           </div>
         ) : (
           <>

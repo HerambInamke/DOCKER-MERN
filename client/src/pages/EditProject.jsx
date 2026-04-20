@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from 'react-query';
 import { useAuth } from '../hooks/useAuth';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { Plus, X } from 'lucide-react';
 
 const EditProject = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -46,7 +47,12 @@ const EditProject = () => {
     (projectData) => api.put(`/api/projects/${id}`, projectData),
     {
       onSuccess: () => {
+        toast.success('Project updated.');
         navigate(`/projects/${id}`);
+      },
+      onError: (error) => {
+        const validationMessage = error.response?.data?.errors?.[0]?.msg;
+        toast.error(validationMessage || error.response?.data?.message || 'Could not update project.');
       },
     }
   );
@@ -57,12 +63,13 @@ const EditProject = () => {
     }
   }, [project, user, navigate]);
 
-  if (!isAuthenticated) {
-    navigate('/login');
-    return null;
-  }
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, loading, navigate]);
 
-  if (isLoading) {
+  if (loading || !isAuthenticated || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -149,7 +156,11 @@ const EditProject = () => {
       return;
     }
 
-    updateProjectMutation.mutate(formData);
+    updateProjectMutation.mutate({
+      ...formData,
+      liveUrl: formData.liveUrl.trim(),
+      githubUrl: formData.githubUrl.trim(),
+    });
   };
 
   return (

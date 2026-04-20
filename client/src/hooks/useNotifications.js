@@ -14,8 +14,9 @@ export const useNotifications = () => {
     () => api.get('/api/notifications').then(res => res.data),
     {
       enabled: isAuthenticated,
-      refetchInterval: 30000, // Poll every 30 seconds
-      refetchIntervalInBackground: true,
+      refetchInterval: 120000,
+      refetchIntervalInBackground: false,
+      retry: false,
       onSuccess: (data) => {
         setUnreadCount(data.unreadCount || 0);
       },
@@ -28,8 +29,9 @@ export const useNotifications = () => {
     () => api.get('/api/notifications/unread-count').then(res => res.data),
     {
       enabled: isAuthenticated,
-      refetchInterval: 10000, // Poll every 10 seconds for unread count
-      refetchIntervalInBackground: true,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
+      retry: false,
       onSuccess: (data) => {
         setUnreadCount(data.unreadCount || 0);
       },

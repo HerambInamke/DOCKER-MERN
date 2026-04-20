@@ -168,19 +168,19 @@ router.put('/profile', auth, [
     .isLength({ max: 100 })
     .withMessage('Location cannot exceed 100 characters'),
   body('website')
-    .optional()
+    .optional({ checkFalsy: true })
     .isURL()
     .withMessage('Please enter a valid URL'),
   body('github')
-    .optional()
+    .optional({ checkFalsy: true })
     .matches(/^[a-zA-Z0-9-]+$/)
     .withMessage('Please enter a valid GitHub username'),
   body('twitter')
-    .optional()
+    .optional({ checkFalsy: true })
     .matches(/^[a-zA-Z0-9_]+$/)
     .withMessage('Please enter a valid Twitter username'),
   body('linkedin')
-    .optional()
+    .optional({ checkFalsy: true })
     .matches(/^[a-zA-Z0-9-]+$/)
     .withMessage('Please enter a valid LinkedIn username'),
 ], async (req, res) => {

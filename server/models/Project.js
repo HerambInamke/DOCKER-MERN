@@ -24,7 +24,10 @@ const projectSchema = new mongoose.Schema({
   },
   liveUrl: {
     type: String,
-    match: [/^https?:\/\/.+/, 'Please enter a valid URL'],
+    validate: {
+      validator: value => !value || /^https?:\/\/.+/.test(value),
+      message: 'Please enter a valid URL',
+    },
     default: '',
   },
   images: [{
@@ -58,7 +61,7 @@ const projectSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['draft', 'published', 'archived'],
-    default: 'draft',
+    default: 'published',
   },
   visibility: {
     type: String,

@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useMutation } from 'react-query';
+import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { Plus, X } from 'lucide-react';
 
 const CreateProject = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -26,14 +27,28 @@ const CreateProject = () => {
     (projectData) => api.post('/api/projects', projectData),
     {
       onSuccess: (response) => {
+        toast.success('Project posted.');
         navigate(`/projects/${response.data.project._id}`);
+      },
+      onError: (error) => {
+        const validationMessage = error.response?.data?.errors?.[0]?.msg;
+        toast.error(validationMessage || error.response?.data?.message || 'Could not create project.');
       },
     }
   );
 
-  if (!isAuthenticated) {
-    navigate('/login');
-    return null;
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, loading, navigate]);
+
+  if (loading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   const handleChange = (e) => {
@@ -116,7 +131,11 @@ const CreateProject = () => {
       return;
     }
 
-    createProjectMutation.mutate(formData);
+    createProjectMutation.mutate({
+      ...formData,
+      liveUrl: formData.liveUrl.trim(),
+      githubUrl: formData.githubUrl.trim(),
+    });
   };
 
   return (

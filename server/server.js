@@ -24,23 +24,30 @@ app.use(helmet());
 // Rate limiting
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 300 : 2000,
   message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Strict rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 login attempts per windowMs
+  max: process.env.NODE_ENV === 'production' ? 10 : 100,
   message: 'Too many login attempts, please try again later.',
   skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Rate limiting for write operations
 const writeLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10, // limit each IP to 10 write requests per minute
+  max: process.env.NODE_ENV === 'production' ? 30 : 300,
   message: 'Too many write requests, please slow down.',
+  skip: (req) => req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 app.use(generalLimiter);
@@ -60,9 +67,9 @@ app.use('/uploads', express.static('uploads'));
 
 // Routes with rate limiting
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/projects', writeLimiter, projectRoutes);
+app.use('/api/projects', projectRoutes);
 app.use('/api', writeLimiter, commentRoutes);
-app.use('/api/users', writeLimiter, userRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/trending', trendingRoutes);

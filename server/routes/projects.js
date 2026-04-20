@@ -14,6 +14,7 @@ router.get('/', [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50'),
   query('sort').optional().isIn(['newest', 'oldest', 'popular', 'trending']).withMessage('Invalid sort option'),
+  query('search').optional().isString().withMessage('Search must be a string'),
   query('tags').optional().isString().withMessage('Tags must be a string'),
   query('technologies').optional().isString().withMessage('Technologies must be a string'),
   query('author').optional().isMongoId().withMessage('Invalid author ID'),
@@ -45,7 +46,9 @@ router.get('/', [
     }
 
     if (req.query.technologies) {
-      const technologies = req.query.technologies.split(',').map(tech => tech.trim());
+      const technologies = req.query.technologies
+        .split(',')
+        .map(tech => new RegExp(`^${tech.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'));
       filter.technologies = { $in: technologies };
     }
 
@@ -146,7 +149,7 @@ router.post('/', auth, [
     .matches(/^https:\/\/github\.com\/[a-zA-Z0-9-]+\/[a-zA-Z0-9._-]+$/)
     .withMessage('Please enter a valid GitHub repository URL'),
   body('liveUrl')
-    .optional()
+    .optional({ checkFalsy: true })
     .isURL()
     .withMessage('Please enter a valid live URL'),
   body('tags')
@@ -206,7 +209,7 @@ router.put('/:id', auth, [
     .isURL()
     .withMessage('Please enter a valid GitHub URL'),
   body('liveUrl')
-    .optional()
+    .optional({ checkFalsy: true })
     .isURL()
     .withMessage('Please enter a valid live URL'),
 ], async (req, res) => {
